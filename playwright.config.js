@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
-  testDir: "./tests/browser",
+  testDir: process.env.PRODUCTION_CHECK ? "./tests/production" : "./tests/browser",
   timeout: 30000,
   workers: 1,
   use: {

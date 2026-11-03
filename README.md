@@ -26,7 +26,11 @@ npm run build
 - **Reports:** one student's subject progress, assessed skills, parent-facing comment, staff-only follow-up goals, browser print/Save as PDF, and Google-account-restricted parent links.
 - **School settings:** marking defaults, future assessment rubrics, JSON backup/import, staff invitations and share revocation.
 
-Sample classroom data stays in browser storage and cannot be published. Cloud school records load only after Google sign-in; a failed cloud request never falls back to sample or empty data.
+The sample classroom is available only in the local development server for QA. Production builds have no sample entry or sample activation path, including after a reload with old sample data in browser storage. Cloud school records load only after Google sign-in; a failed cloud request never falls back to sample or empty data.
+
+Production: https://classinsights-school.vercel.app. Google is currently disabled in Supabase pending provider configuration; the sign-in button checks provider availability and shows an inline error instead of navigating to the failed OAuth endpoint. Actual Google sign-in is not verified yet. Billing/subscription enforcement is not implemented; removing the sample does not make authenticated school access paid.
+
+For production login regressions, run `PRODUCTION_CHECK=1 TEST_URL=<production-or-preview-url> npm run test:e2e` (set environment variables using your shell's syntax). The regular browser suite uses the development-only sample fixture.
 
 ## Grading policy
 

@@ -86,12 +86,11 @@ export default function Login({ onDemo, error: externalError }) {
           <br />
           Parents open the private link shared by their teacher.
         </p>
-        <div className="divider">
-          <span>Take a look around</span>
-        </div>
-        <button className="quiet demo-button" onClick={onDemo}>
-          Explore a sample classroom <ArrowUpRight size={17} />
-        </button>
+        {import.meta.env.DEV && onDemo && (
+          <button className="quiet demo-button" onClick={onDemo}>
+            Explore a sample classroom <ArrowUpRight size={17} />
+          </button>
+        )}
         <div className="privacy-note">
           <ShieldCheck size={20} />
           <span>

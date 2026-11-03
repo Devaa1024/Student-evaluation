@@ -18,6 +18,24 @@ export async function signIn() {
     throw new Error(
       "School sign-in is not configured yet. Please contact the school administrator.",
     );
+  // OAuth redirects leave the app before disabled-provider errors can be shown.
+  // Check the public provider settings first so configuration outages stay here.
+  let settings;
+  try {
+    const response = await fetch(`${url}/auth/v1/settings`, {
+      headers: { apikey: key },
+      signal: AbortSignal.timeout(8000),
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Auth service unavailable");
+    settings = await response.json();
+  } catch {
+    throw new Error("Sign-in is temporarily unavailable. Please try again shortly.");
+  }
+  if (!settings.external?.google)
+    throw new Error(
+      "Google sign-in is not available yet. Please contact the school administrator.",
+    );
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {

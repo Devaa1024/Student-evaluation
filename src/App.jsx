@@ -153,6 +153,7 @@ export default function App() {
     return () => window.removeEventListener("storage", fn);
   }, [demo]);
   function explore() {
+    if (!import.meta.env.DEV) return;
     try {
       const raw = localStorage.getItem("classinsights_demo_v2");
       const saved = raw
@@ -247,7 +248,8 @@ export default function App() {
       </main>
     );
   if (token) return <SharedPage token={token} user={user} />;
-  if (!demo && !user) return <Login onDemo={explore} error={error} />;
+  if (!demo && !user)
+    return <Login onDemo={import.meta.env.DEV ? explore : undefined} error={error} />;
   if (loading)
     return (
       <main className="recovery glass" role="status">
