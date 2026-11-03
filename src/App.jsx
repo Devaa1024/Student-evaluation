@@ -445,8 +445,8 @@ export default function App() {
             <p>{descriptions[tab][1]}</p>
           </div>
           {tab === "overview" && (
-            <button onClick={() => go("assessments")}>
-              <Plus size={19} /> Record assessment
+            <button onClick={() => go(pro ? "assessments" : "classes")}>
+              <Plus size={19} /> {pro ? "Record assessment" : "Continue free setup"}
             </button>
           )}
         </header>

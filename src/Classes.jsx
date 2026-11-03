@@ -149,12 +149,6 @@ export default function Classes({
       </section>
       {c && (
         <>
-          {!pro && (
-            <ProGate
-              go={go}
-              title="Your class is ready. Add students with Pro."
-            />
-          )}
           {(pro || c.students.length > 0) && (
             <section className="glass">
               <div className="section-head">
@@ -280,6 +274,7 @@ export default function Classes({
               ))}
             </div>
           </section>
+          {!pro && <ProGate go={go} title="Your class is ready. Add students with Pro." />}
         </>
       )}
       {modal && (

@@ -185,7 +185,7 @@ export function SetupHome({ w, go, pro }) {
               pro
                 ? "Pro is active. Start your first roster."
                 : "Upgrade when you are ready to track students.",
-              "classes",
+              pro ? "classes" : "settings",
             ],
           ].map(([n, title, copy, target]) => (
             <button
