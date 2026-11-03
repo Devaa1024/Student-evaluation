@@ -1,0 +1,20 @@
+name: Validate ClassInsights
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      # Browser fixtures mock all authenticated API requests. No real credentials.
+      VITE_SUPABASE_URL: https://cdhiyvqszsqwhteapxpg.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_test_fixture
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
