@@ -69,6 +69,7 @@ export default function Login({ onDemo, error: externalError }) {
         </span>
         <h2>Welcome to ClassInsights</h2>
         <p>A little clarity for a lot of potential.</p>
+        <p className="login-note">Free class, subject and schedule setup. Student tracking and sharing are Pro: RM19.90 per calendar month.</p>
         <button className="google-button" onClick={login} disabled={busy}>
           <span className="google-g" aria-hidden="true">
             G

@@ -9,6 +9,7 @@ insert into public.ci_workspaces(id,owner_id,payload) values
 insert into public.ci_shares(id,workspace_id,kind,parent_email,payload) values
 ('30000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','leaderboard',null,'{"kind":"leaderboard","rows":[{"alias":"Test Owl","score":80}]}'),
 ('30000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000001','parent','ci-parent@example.invalid','{"kind":"parent","studentName":"Test Learner"}');
+insert into ci_private.plans(user_id,period_start,period_end) values('10000000-0000-4000-8000-000000000001',now(),now()+interval '1 month');
 set local role anon;
 do $$begin
  if public.ci_read_share('30000000-0000-4000-8000-000000000001')->>'kind' is distinct from 'leaderboard' then raise exception 'Anonymous leaderboard failed'; end if;

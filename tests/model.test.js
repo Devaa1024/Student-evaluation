@@ -15,6 +15,14 @@ import {
   observations,
 } from "../src/model.js";
 import { demoWorkspace } from "../src/demo.js";
+
+test('schedule schema rejects invalid times and missing subjects',()=>{
+ const w=demoWorkspace(),c=w.classes[0],b=c.subjects[0];
+ w.schedules=[{id:'lesson',classId:c.id,subjectId:b.id,day:0,start:'08:00',end:'09:00',room:''}];
+ assert.equal(workspaceSchema.safeParse(w).success,true);
+ w.schedules[0].end='07:59'; assert.equal(workspaceSchema.safeParse(w).success,false);
+ w.schedules[0].end='09:00'; w.schedules[0].subjectId='missing'; assert.equal(workspaceSchema.safeParse(w).success,false);
+});
 test("same-day assessments follow their recorded creation order", () => {
   const w = demoWorkspace(),
     c = w.classes[0],

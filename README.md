@@ -2,6 +2,19 @@
 
 A glass-themed school performance workspace for teachers, headmasters and families. React + Vite, Supabase Google OAuth and Postgres, deployed on Vercel.
 
+## Free setup, Pro and administration
+
+- Teacher app: https://classinsights-school.vercel.app/
+- Separate platform administration: https://classinsights-school.vercel.app/admin (founder Google account only; authorization is checked in PostgreSQL, never by URL secrecy).
+- Free: Google sign-in, class and subject creation, weekly Malaysia-time schedules, account settings and existing-data backup/export.
+- Pro: RM19.90 per calendar month, covering workspaces owned by the paying account and their invited staff. Includes students, marks, progress analysis, reports/goals, leaderboards, lesson topics and staff invitations.
+- Settings contains the full feature guide, plan comparison, account information, activation request and expiry display. The separate Syllabus navigation item is consolidated into optional lesson topics under Schedule.
+- Payment is currently **manual verification**, with no automatic checkout, debit or renewal. The admin must independently verify an actual RM19.90 receipt before recording its unique transaction reference. Recording extends one calendar month using the initial Malaysia-time billing day (clamping February and preserving the original anchor for March). Requests alone do not grant access. No synthetic payment records were left in production.
+- Existing records remain readable/exportable on expiry. PostgreSQL blocks paid-data changes, imports, paid workspace creation, new shares and new staff grants without an active owner plan. Revocation and exports remain available.
+- Admin lists users (join/last-login), active memberships, requests, usage counts, ledger and recent audit entries. Search filters the latest 100 matching records; global counts are unfiltered. Workspace inspection is read-only and audit-logged. Admin permission is stored in a private server-owned table. Neither user metadata nor browser state can grant it.
+
+Database additions are recorded in `docs/admin-and-pro.sql` and `docs/calendar-month.sql`, applied after the earlier schema and visibility migrations. Private billing/admin tables also have RLS enabled with no client grants/policies, intentionally denying direct client access. Bootstrap administrator membership from a verified founder auth user through a trusted database operation; never grant it through signup. `tests/pro-access.sql` rolls back synthetic fixtures and checks free/paid/expired permissions, admin isolation, forged metadata and duplicate receipt rejection.
+
 ## Run
 
 Use Node 24 (minimum 22.12).
@@ -28,7 +41,7 @@ npm run build
 
 The sample classroom is available only in the local development server for QA. Production builds have no sample entry or sample activation path, including after a reload with old sample data in browser storage. Cloud school records load only after Google sign-in; a failed cloud request never falls back to sample or empty data.
 
-Production: https://classinsights-school.vercel.app. Google sign-in, callback, session persistence, workspace creation and cloud update were verified with the owner's Google account on 2026-11-03. The sign-in button checks provider availability and shows an inline error if authentication becomes unavailable. Billing/subscription enforcement is not implemented; removing the sample does not make authenticated school access paid.
+Google sign-in, callback, session persistence, workspace creation and cloud update were verified with the owner's Google account on 2026-11-03. The sign-in button checks provider availability and shows an inline error if authentication becomes unavailable. Paid features are now database-enforced; automated merchant checkout remains unconnected.
 
 The `owner_workspace_returning_visibility` database migration fixes the initial workspace SELECT policy so a newly inserted owner row passes PostgREST's `INSERT ... RETURNING` check. Its SQL is recorded in `docs/owner-workspace-visibility.sql`, and the new-install schema includes the correction. The transactional access-control suite covers this exact operation and still checks unrelated-user isolation.
 
@@ -93,4 +106,4 @@ Historical v1 scales/weights were never saved. Import necessarily uses the last 
 
 This version uses one school JSON document with optimistic concurrency and a 10 MB database limit. For large schools or simultaneous high-volume entry, migrate to normalized assessment/student tables and granular updates before scaling. Staff permissions currently cover the entire school workspace, not individual class assignments. Follow-up goals have no automatic notification service. No email is sent when staff access or report links are created: share the generated link yourself.
 
-Before a school-wide launch, finish live Google OAuth verification, test with separate teacher and parent accounts, review school consent/retention requirements, and define backup ownership. Student achievement is one signal: use growth, effort and supportive follow-up alongside any competition.
+Before a school-wide launch, test with separate teacher and parent accounts, connect and test a merchant checkout if automated billing is required, review school consent/retention requirements, and define backup ownership. Student achievement is one signal: use growth, effort and supportive follow-up alongside any competition.

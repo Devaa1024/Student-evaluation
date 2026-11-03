@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   House,
   Users,
@@ -34,11 +41,15 @@ import {
 } from "./cloud.js";
 import { emptyWorkspace, workspaceSchema, saveDemo } from "./model.js";
 import { demoWorkspace } from "./demo.js";
+import Schedule from "./Schedule.jsx";
+import { ProGate, SetupHome } from "./Plans.jsx";
+const Admin = lazy(() => import("./Admin.jsx"));
 const nav = [
   ["overview", "Overview", House],
   ["classes", "Classes & students", Users],
   ["assessments", "Assessments", ClipboardList],
   ["syllabus", "Syllabus", BookOpen],
+  ["schedule", "Schedule", BookOpen],
   ["leaderboard", "Leaderboard", Trophy],
   ["reports", "Reports", ChartNoAxesCombined],
   ["settings", "School settings", SettingsIcon],
@@ -69,8 +80,14 @@ const descriptions = {
     "Make it your school.",
     "Your people, your teaching, your workspace.",
   ],
+  schedule: [
+    "Weekly schedule",
+    "Choose a subject. Add a time. Your week is ready.",
+  ],
 };
 export default function App() {
+  const adminRoute = location.pathname.replace(/\/$/, "") === "/admin";
+  const [plan, setPlan] = useState(null);
   const [user, setUser] = useState(null),
     [authLoading, setAuthLoading] = useState(!!supabase),
     [demo, setDemo] = useState(false),
@@ -123,8 +140,44 @@ export default function App() {
     }
   }, [user?.id]);
   useEffect(() => {
-    if (user && !demo && !token) reload();
+    if (user && !demo && !token && !adminRoute) reload();
   }, [user?.id, demo, token, reload]);
+  const refreshPlan = useCallback(async () => {
+    if (!row || demo || adminRoute) return;
+    const { data, error } = await supabase.rpc("ci_plan", {
+      workspace: row.id,
+    });
+    if (error) {
+      setPlan(null);
+      throw error;
+    }
+    setPlan(data);
+  }, [row?.id, demo, adminRoute]);
+  useEffect(() => {
+    let active = true;
+    setPlan(null);
+    async function check() {
+      if (!row || demo || adminRoute) return;
+      const { data, error } = await supabase.rpc("ci_plan", {
+        workspace: row.id,
+      });
+      if (active) {
+        setPlan(error ? null : data);
+        if (error)
+          setError(
+            "Could not verify plan. Paid features remain locked. " +
+              error.message,
+          );
+      }
+    }
+    check();
+    const timer = setInterval(check, 60000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [row?.id, demo, adminRoute]);
+  const pro = demo || !!plan?.pro;
   useEffect(() => {
     const fn = (e) => {
       if (dirty) {
@@ -249,7 +302,17 @@ export default function App() {
     );
   if (token) return <SharedPage token={token} user={user} />;
   if (!demo && !user)
-    return <Login onDemo={import.meta.env.DEV ? explore : undefined} error={error} />;
+    return (
+      <Login onDemo={import.meta.env.DEV ? explore : undefined} error={error} />
+    );
+  if (adminRoute)
+    return (
+      <Suspense
+        fallback={<main className="recovery">Opening administration…</main>}
+      >
+        <Admin user={user} logout={logout} />
+      </Suspense>
+    );
   if (loading)
     return (
       <main className="recovery glass" role="status">
@@ -310,17 +373,25 @@ export default function App() {
       <aside className="sidebar glass">
         <Brand />
         <nav aria-label="Main navigation">
-          {nav.map(([key, label, Icon]) => (
-            <button
-              key={key}
-              className={key === tab ? "active" : ""}
-              aria-current={key === tab ? "page" : undefined}
-              onClick={() => go(key)}
-            >
-              <Icon size={20} />
-              <span>{label}</span>
-            </button>
-          ))}
+          {nav
+            .filter(([key]) => key !== "syllabus")
+            .map(([key, label, Icon]) => (
+              <button
+                key={key}
+                className={key === tab ? "active" : ""}
+                aria-current={key === tab ? "page" : undefined}
+                onClick={() => go(key)}
+              >
+                <Icon size={20} />
+                <span>
+                  {label}
+                  {["assessments", "leaderboard", "reports"].includes(key) &&
+                  !pro
+                    ? " · Pro"
+                    : ""}
+                </span>
+              </button>
+            ))}
         </nav>
         <div className="sidebar-footer">
           <Avatar
@@ -351,7 +422,11 @@ export default function App() {
             ) : (
               <span className="saved-status">
                 <Cloud size={15} />
-                {busy ? "Saving…" : "Cloud workspace"}
+                {busy
+                  ? "Saving…"
+                  : pro
+                    ? "Pro · Cloud workspace"
+                    : "Free · Cloud workspace"}
               </span>
             )}
             <button
@@ -463,7 +538,8 @@ export default function App() {
         )}
         <div className="view-content" key={tab + ":" + c?.id + ":" + b?.id}>
           <fieldset className="workspace-fields" disabled={busy}>
-            {tab === "overview" && (
+            {tab === "overview" && !pro && <SetupHome {...{ w, go, pro }} />}
+            {tab === "overview" && pro && (
               <Overview
                 {...{ w, c, b, go }}
                 openStudent={(sid) => {
@@ -474,7 +550,7 @@ export default function App() {
             )}
             {tab === "classes" && (
               <Classes
-                {...{ w, c, b, update }}
+                {...{ w, c, b, update, pro, go }}
                 selectClass={(sid) =>
                   navigate(() => {
                     setClassId(sid);
@@ -483,16 +559,47 @@ export default function App() {
                 }
               />
             )}
-            {tab === "assessments" && (
+            {["assessments", "leaderboard", "reports", "syllabus"].includes(
+              tab,
+            ) &&
+              !pro && <ProGate go={go} />}
+            {tab === "assessments" && pro && (
               <Assessments {...{ w, c, b, update, setDirty }} />
             )}
-            {tab === "syllabus" && <Syllabus {...{ c, b, update }} />}
-            {tab === "leaderboard" && <Leaderboard {...{ w, c, b, share }} />}
-            {tab === "reports" && (
+            {tab === "schedule" && (
+              <>
+                <Schedule {...{ w, c, b, update, go }} />
+                {pro && (
+                  <details className="glass">
+                    <summary>Lesson topics (optional)</summary>
+                    <Syllabus {...{ c, b, update }} />
+                  </details>
+                )}
+              </>
+            )}
+            {tab === "syllabus" && pro && <Syllabus {...{ c, b, update }} />}
+            {tab === "leaderboard" && pro && (
+              <Leaderboard {...{ w, c, b, share }} />
+            )}
+            {tab === "reports" && pro && (
               <Reports {...{ w, c, studentId, setStudentId, update, share }} />
             )}
             {tab === "settings" && (
-              <Settings {...{ w, c, b, update, row, demo, user, notify }} />
+              <Settings
+                {...{
+                  w,
+                  c,
+                  b,
+                  update,
+                  row,
+                  demo,
+                  user,
+                  notify,
+                  plan,
+                  pro,
+                  refreshPlan,
+                }}
+              />
             )}
           </fieldset>
         </div>

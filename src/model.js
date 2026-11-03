@@ -88,6 +88,20 @@ const sessionSchema = z
 export const workspaceSchema = z
   .object({
     version: z.literal(2),
+    schedules: z
+      .array(
+        z.object({
+          id: text,
+          classId: text,
+          subjectId: text,
+          day: z.number().int().min(0).max(6),
+          start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+          end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+          room: z.string().max(100),
+        }),
+      )
+      .max(2000)
+      .default([]),
     settings: z.object({
       school: text,
       teacher: text,
@@ -135,6 +149,15 @@ export const workspaceSchema = z
   })
   .superRefine((w, ctx) => {
     const classes = new Map(w.classes.map((c) => [c.id, c]));
+    for (const s of w.schedules || [])
+      if (
+        s.end <= s.start ||
+        !classes.get(s.classId)?.subjects.some((b) => b.id === s.subjectId)
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "Invalid schedule time or missing subject",
+        });
     if (
       classes.size !== w.classes.length ||
       new Set(w.sessions.map((s) => s.id)).size !== w.sessions.length
@@ -167,6 +190,7 @@ export const emptyWorkspace = () => ({
   version: 2,
   settings: { school: "My school", teacher: "", maxScore: 10 },
   classes: [],
+  schedules: [],
   sessions: [],
   interventions: [],
 });

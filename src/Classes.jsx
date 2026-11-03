@@ -2,7 +2,16 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { id, defaultElements } from "./model.js";
 import { Field, Modal, Avatar, Empty } from "./components.jsx";
-export default function Classes({ w, c, b, update, selectClass }) {
+import { ProGate } from "./Plans.jsx";
+export default function Classes({
+  w,
+  c,
+  b,
+  update,
+  selectClass,
+  pro = true,
+  go,
+}) {
   const [modal, setModal] = useState(null);
   const close = () => setModal(null);
   async function save(e) {
@@ -60,6 +69,9 @@ export default function Classes({ w, c, b, update, selectClass }) {
       return;
     await update((next) => {
       if (type === "class") {
+        next.schedules = (next.schedules || []).filter(
+          (s) => s.classId !== item.id,
+        );
         next.classes = next.classes.filter((x) => x.id !== item.id);
         next.sessions = next.sessions.filter((s) => s.classId !== item.id);
         next.interventions = next.interventions.filter(
@@ -77,6 +89,9 @@ export default function Classes({ w, c, b, update, selectClass }) {
             (x) => x.studentId !== item.id,
           );
         } else {
+          next.schedules = (next.schedules || []).filter(
+            (s) => s.subjectId !== item.id || s.classId !== c.id,
+          );
           cl.subjects = cl.subjects.filter((x) => x.id !== item.id);
           next.sessions = next.sessions.filter(
             (s) => s.classId !== c.id || s.subjectId !== item.id,
@@ -134,80 +149,97 @@ export default function Classes({ w, c, b, update, selectClass }) {
       </section>
       {c && (
         <>
-          <section className="glass">
-            <div className="section-head">
-              <div>
-                <h2>Students · {c.name}</h2>
-                <p className="sub">
-                  Leaderboard participation is off until you record permission
-                  and a display name.
-                </p>
+          {!pro && (
+            <ProGate
+              go={go}
+              title="Your class is ready. Add students with Pro."
+            />
+          )}
+          {(pro || c.students.length > 0) && (
+            <section className="glass">
+              <div className="section-head">
+                <div>
+                  <h2>Students · {c.name}</h2>
+                  <p className="sub">
+                    Leaderboard participation is off until you record permission
+                    and a display name.
+                  </p>
+                </div>
+                <button
+                  disabled={!pro}
+                  onClick={() => setModal({ type: "student" })}
+                >
+                  <Plus size={17} /> Add student
+                </button>
               </div>
-              <button onClick={() => setModal({ type: "student" })}>
-                <Plus size={17} /> Add student
-              </button>
-            </div>
-            <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Parent / guardian</th>
-                    <th>Display name</th>
-                    <th>Sharing</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {c.students.map((st) => (
-                    <tr key={st.id}>
-                      <td>
-                        <span className="person">
-                          <Avatar name={st.name} />
-                          <strong>{st.name}</strong>
-                        </span>
-                      </td>
-                      <td>
-                        {st.parent || "—"}
-                        <small className="block muted">{st.parentEmail}</small>
-                      </td>
-                      <td>{st.alias || "—"}</td>
-                      <td>
-                        {st.shareConsent ? (
-                          <span className="positive">Permission recorded</span>
-                        ) : (
-                          <span className="muted">Private</span>
-                        )}
-                      </td>
-                      <td>
-                        <button
-                          className="icon-button"
-                          aria-label={"Edit " + st.name}
-                          onClick={() =>
-                            setModal({ type: "student", item: st })
-                          }
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          className="icon-button danger"
-                          aria-label={"Delete " + st.name}
-                          onClick={() => remove("student", st)}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Parent / guardian</th>
+                      <th>Display name</th>
+                      <th>Sharing</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!c.students.length && (
-                <Empty title="Who’s in your classroom?">
-                  Add students to start tracking progress.
-                </Empty>
-              )}
-            </div>
-          </section>
+                  </thead>
+                  <tbody>
+                    {c.students.map((st) => (
+                      <tr key={st.id}>
+                        <td>
+                          <span className="person">
+                            <Avatar name={st.name} />
+                            <strong>{st.name}</strong>
+                          </span>
+                        </td>
+                        <td>
+                          {st.parent || "—"}
+                          <small className="block muted">
+                            {st.parentEmail}
+                          </small>
+                        </td>
+                        <td>{st.alias || "—"}</td>
+                        <td>
+                          {st.shareConsent ? (
+                            <span className="positive">
+                              Permission recorded
+                            </span>
+                          ) : (
+                            <span className="muted">Private</span>
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            className="icon-button"
+                            aria-label={"Edit " + st.name}
+                            disabled={!pro}
+                            onClick={() =>
+                              setModal({ type: "student", item: st })
+                            }
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            className="icon-button danger"
+                            aria-label={"Delete " + st.name}
+                            disabled={!pro}
+                            onClick={() => remove("student", st)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!c.students.length && (
+                  <Empty title="Who’s in your classroom?">
+                    Add students to start tracking progress.
+                  </Empty>
+                )}
+              </div>
+            </section>
+          )}
           <section className="glass">
             <div className="section-head">
               <h2>Subjects</h2>

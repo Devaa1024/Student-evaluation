@@ -37,7 +37,11 @@ Image-generated glass dashboard concept: frosted white sidebar, mint/lavender am
 
 ## Remaining deployment/account verification
 
-The dedicated Supabase schema is installed. Vercel project `classinsights-school` exists, but the initial deployment request returned 403 pending a grant to the `devaa` team. Google Cloud project `still-smithy-513015-d6` and the ClassInsights Web OAuth client are created. Supabase Google-provider configuration and live end-to-end OAuth still need completion and verification. Do not describe the app as deployed or Google sign-in as working until those checks actually pass.
+Vercel production is live at https://classinsights-school.vercel.app. Google login, callback, persisted session, workspace creation and cloud updates were verified with the owner account. Owner SELECT policy was corrected for INSERT ... RETURNING. Separate real staff/parent account testing remains outstanding.
+
+The November 4 update adds a private `/admin` route, server-owned admin membership, payment ledger, Pro activation requests, calendar-month expiry and paid-data enforcement. A free account cannot add student/mark data through direct API calls or import, create shares, invite staff, edit plan tables or call admin RPCs. An activation request alone grants nothing. Existing school records are preserved on expiry. Manual payment references are unique; no test receipt or paid plan is retained in production. Automated merchant checkout is not connected.
+
+Validation added: free-teacher schedule creation/overlap rejection, paid UI gates and feature guide; non-admin URL denial; transactional free/paid/expired access, forged user metadata, admin-only receipt recording, duplicate reference rejection, and January/February/March/leap-year calendar anchors. Private billing/admin tables deliberately have RLS and no client policies/grants; security advisors report those as informational deny-by-default tables. The existing leaked-password protection warning also remains; the app uses Google sign-in.
 
 ## Boundaries to resolve before broad school rollout
 

@@ -1916,3 +1916,21 @@ tr:last-child td {
     margin: 16mm;
   }
 }
+/* Account, setup and platform administration. */
+.plan-badge { display:inline-block; font-size:11px; font-weight:800; letter-spacing:.1em; color:var(--accent,#167568); background:rgba(80,190,160,.12); border-radius:999px; padding:7px 12px; }
+.price {display:block; font-size:30px; margin:16px 0; white-space:nowrap;}
+.price small {font-size:13px; font-weight:500; color:var(--muted,#687b7c);}
+.upgrade-card {background:linear-gradient(120deg,rgba(213,243,232,.7),rgba(232,227,249,.7));}
+.upgrade-card p {max-width:650px;}
+.setup-steps {display:grid; grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:25px;}
+.setup-step {display:flex; flex-direction:column; align-items:flex-start; text-align:left; gap:12px; padding:22px!important; white-space:normal!important;}
+.setup-step span:last-child {font-size:13px; font-weight:400;line-height:1.6;}
+.guide-item {padding:15px 0;border-bottom:1px solid rgba(100,130,125,.15);}
+.guide-item summary {cursor:pointer;font-weight:650;line-height:1.6;}
+.guide-item p {line-height:1.8;max-width:850px;margin:12px 0;}
+.admin-page {max-width:1500px;margin:auto;padding:32px;}
+.admin-page>.glass {margin:22px 0;}
+.admin-metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;}
+.admin-metrics section {padding:24px;}
+.admin-json {max-height:550px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;padding:18px;background:rgba(100,130,125,.07);border-radius:16px;}
+@media(max-width:700px) {.setup-steps{grid-template-columns:1fr}.admin-page{padding:16px}.admin-metrics{grid-template-columns:1fr 1fr}.price{font-size:25px}.admin-page header{align-items:flex-start;flex-wrap:wrap}}

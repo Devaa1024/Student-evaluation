@@ -3,6 +3,8 @@ import { Download, Upload, Plus, Trash2, Link2 } from "lucide-react";
 import { Field, Empty } from "./components.jsx";
 import { id, migrateLegacy, localDate } from "./model.js";
 import { listShares, revokeShare, supabase } from "./cloud.js";
+import { PlanPanel } from "./Plans.jsx";
+import Guide from "./Guide.jsx";
 export function downloadBackup(w) {
   const a = document.createElement("a"),
     url = URL.createObjectURL(
@@ -13,7 +15,19 @@ export function downloadBackup(w) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-export default function Settings({ w, c, b, update, row, demo, user, notify }) {
+export default function Settings({
+  w,
+  c,
+  b,
+  update,
+  row,
+  demo,
+  user,
+  notify,
+  plan,
+  pro,
+  refreshPlan,
+}) {
   const [shares, setShares] = useState([]),
     [invites, setInvites] = useState([]),
     [profile, setProfile] = useState(w.settings),
@@ -61,6 +75,32 @@ export default function Settings({ w, c, b, update, row, demo, user, notify }) {
   const owner = !demo && row?.owner_id === user?.id;
   return (
     <>
+      {!demo && (
+        <PlanPanel
+          row={row}
+          plan={plan}
+          refresh={() => refreshPlan().catch((e) => notify(e.message, true))}
+          notify={notify}
+        />
+      )}
+      <section className="glass">
+        <h2>Your account</h2>
+        <p>
+          Signed in with Google as{" "}
+          <strong>{user?.email || "Development sample"}</strong>.
+        </p>
+        <p>
+          {owner
+            ? "You own this workspace and manage staff access."
+            : "You are a staff member. Ask the workspace owner to manage payment and invitations."}
+        </p>
+        <p>
+          No separate ClassInsights password is stored. Manage your Google
+          password and two-step verification in your Google account. Parents can
+          only open the private reports addressed to their Google email.
+        </p>
+      </section>
+      <Guide />
       <section className="glass">
         <h2>Your school, your workspace.</h2>
         <p className="sub">
@@ -109,7 +149,7 @@ export default function Settings({ w, c, b, update, row, demo, user, notify }) {
           <button>Save school settings</button>
         </form>
       </section>
-      {b && (
+      {b && pro && (
         <section className="glass">
           <h2>Assessment skills · {b.name}</h2>
           <p className="sub">
@@ -266,19 +306,17 @@ export default function Settings({ w, c, b, update, row, demo, user, notify }) {
               Staff can view and edit the entire school workspace. Only its
               owner can manage invitations. Parents use private reports instead.
             </p>
-            {owner && (
+            {owner && pro && (
               <form
                 className="inline-form"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const f = new FormData(e.currentTarget);
                   const form = e.currentTarget;
-                  const { error } = await supabase
-                    .from("ci_staff")
-                    .insert({
-                      workspace_id: row.id,
-                      email: String(f.get("email")).trim().toLowerCase(),
-                    });
+                  const { error } = await supabase.from("ci_staff").insert({
+                    workspace_id: row.id,
+                    email: String(f.get("email")).trim().toLowerCase(),
+                  });
                   if (error) notify(error.message, true);
                   else {
                     form.reset();
