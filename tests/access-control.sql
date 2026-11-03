@@ -36,6 +36,13 @@ set local request.jwt.claims='{"sub":"10000000-0000-4000-8000-000000000001","ema
 set local role authenticated;
 do $$declare affected int; begin
  if (select count(*) from public.ci_workspaces)<>1 then raise exception 'Owner cannot read'; end if;
+ -- Match PostgREST's insert().select(): SELECT policy also checks the new row.
+ declare created_workspace uuid; begin
+  insert into public.ci_workspaces(owner_id,payload)
+   values('10000000-0000-4000-8000-000000000001','{"version":2}')
+   returning id into created_workspace;
+  if created_workspace is null then raise exception 'Workspace insert returning failed'; end if;
+ end;
  update public.ci_workspaces set payload='{"version":2,"test":true}',revision=1 where id='20000000-0000-4000-8000-000000000001' and revision=0;
  get diagnostics affected=row_count;
  if affected<>1 then raise exception 'Owner save failed'; end if;

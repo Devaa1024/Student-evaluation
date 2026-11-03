@@ -28,7 +28,9 @@ npm run build
 
 The sample classroom is available only in the local development server for QA. Production builds have no sample entry or sample activation path, including after a reload with old sample data in browser storage. Cloud school records load only after Google sign-in; a failed cloud request never falls back to sample or empty data.
 
-Production: https://classinsights-school.vercel.app. Google is currently disabled in Supabase pending provider configuration; the sign-in button checks provider availability and shows an inline error instead of navigating to the failed OAuth endpoint. Actual Google sign-in is not verified yet. Billing/subscription enforcement is not implemented; removing the sample does not make authenticated school access paid.
+Production: https://classinsights-school.vercel.app. Google sign-in, callback, session persistence, workspace creation and cloud update were verified with the owner's Google account on 2026-11-03. The sign-in button checks provider availability and shows an inline error if authentication becomes unavailable. Billing/subscription enforcement is not implemented; removing the sample does not make authenticated school access paid.
+
+The `owner_workspace_returning_visibility` database migration fixes the initial workspace SELECT policy so a newly inserted owner row passes PostgREST's `INSERT ... RETURNING` check. Its SQL is recorded in `docs/owner-workspace-visibility.sql`, and the new-install schema includes the correction. The transactional access-control suite covers this exact operation and still checks unrelated-user isolation.
 
 For production login regressions, run `PRODUCTION_CHECK=1 TEST_URL=<production-or-preview-url> npm run test:e2e` (set environment variables using your shell's syntax). The regular browser suite uses the development-only sample fixture.
 

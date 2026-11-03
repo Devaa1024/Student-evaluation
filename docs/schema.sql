@@ -35,7 +35,11 @@ $$;
 revoke all on function ci_private.is_staff(uuid),ci_private.is_owner(uuid) from public;
 grant usage on schema ci_private to authenticated;
 grant execute on function ci_private.is_staff(uuid),ci_private.is_owner(uuid) to authenticated;
-create policy workspace_select on public.ci_workspaces for select to authenticated using(ci_private.is_staff(id));
+-- Direct owner check is needed for INSERT ... RETURNING visibility.
+create policy workspace_select on public.ci_workspaces for select to authenticated using(
+ (owner_id=(select auth.uid()) and ((select auth.jwt())->'app_metadata'->>'provider')='google')
+ or ci_private.is_staff(id)
+);
 create policy workspace_insert on public.ci_workspaces for insert to authenticated with check(owner_id=(select auth.uid()) and ((select auth.jwt())->'app_metadata'->>'provider')='google');
 create policy workspace_update on public.ci_workspaces for update to authenticated using(ci_private.is_staff(id)) with check(ci_private.is_staff(id));
 create policy staff_select on public.ci_staff for select to authenticated using(ci_private.is_owner(workspace_id) or email=lower((select auth.jwt())->>'email'));
